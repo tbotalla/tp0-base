@@ -45,11 +45,11 @@ execute() {
   cp "$base_docker_compose_file" "$target_docker_compose_file"
 
   echo "Copying new client section from $base_docker_compose_file"
-  client_segment=$(sed -n '14,28p' "$base_docker_compose_file")
+  client_segment=$(sed -n '16,31p' "$base_docker_compose_file")
   echo "$client_segment" >new_client_segment.txt
 
   echo "Deleting original client section from $target_docker_compose_file"
-  sed -i '14,27d' "$target_docker_compose_file"
+  sed -i '17,31d' "$target_docker_compose_file"
 
   for ((i = clients; i >= 1; i--)); do
     sed -i '/services:/r new_client_segment.txt' "$target_docker_compose_file"
