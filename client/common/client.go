@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -19,15 +20,17 @@ type ClientConfig struct {
 
 // Client Entity that encapsulates how
 type Client struct {
-	config ClientConfig
-	conn   net.Conn
+	config              ClientConfig
+	conn                net.Conn
+	interruptionChannel chan os.Signal
 }
 
 // NewClient Initializes a new client receiving the configuration
 // as a parameter
-func NewClient(config ClientConfig) *Client {
+func NewClient(config ClientConfig, interruptionChannel chan os.Signal) *Client {
 	client := &Client{
-		config: config,
+		config:              config,
+		interruptionChannel: interruptionChannel,
 	}
 	return client
 }
@@ -61,6 +64,11 @@ loop:
 		select {
 		case <-timeout:
 			break loop
+		case <-c.interruptionChannel:
+			log.Infof("[CLIENT %v] Received an interruption. Attempting to close client connection", c.config.ID)
+			c.conn.Close()
+			log.Infof("[CLIENT %v] Successfully closed client connection", c.config.ID)
+			os.Exit(143)
 		default:
 		}
 
@@ -95,4 +103,5 @@ loop:
 
 	log.Infof("[CLIENT %v] Closing connection", c.config.ID)
 	c.conn.Close()
+	log.Infof("[CLIENT %v] Successfully closed connection", c.config.ID)
 }
